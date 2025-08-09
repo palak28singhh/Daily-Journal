@@ -1,63 +1,40 @@
-// app.js
-const express = require("express");
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
+const express = require('express');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+dotenv.config(); // Load environment variables
 
 const app = express();
 
-// EJS & Public folder
-app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
+// Middleware to parse JSON
+app.use(express.json());
 
-// MongoDB Atlas Connection
-const uri = "mongodb+srv://palak28singhh:bcuVD5pOQRW5Vjtv@clusternew.j8tv1ii.mongodb.net/dailyJournalDB?retryWrites=true&w=majority&appName=ClusterNEW";
-
-mongoose.connect(uri)
-  .then(() => console.log("✅ MongoDB Atlas connected successfully"))
-  .catch(err => console.error("❌ MongoDB connection error:", err));
-
-// Schema & Model
-const postSchema = new mongoose.Schema({
-  title: String,
-  content: String
-});
-const Post = mongoose.model("Post", postSchema);
-
-// Routes
-app.get("/", (req, res) => {
-  Post.find({})
-    .then(posts => {
-      res.render("home", { posts: posts });
-    })
-    .catch(err => console.log(err));
+// Simple health check route for Render
+app.get('/healthz', (req, res) => {
+  res.status(200).send('OK');
 });
 
-app.get("/compose", (req, res) => {
-  res.render("compose");
+// Replace with your actual MongoDB connection string in .env
+const mongoURI = process.env.MONGODB_URI;
+
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log('✅ MongoDB Atlas connected successfully');
+})
+.catch((err) => {
+  console.error('❌ MongoDB connection error:', err);
 });
 
-app.post("/compose", (req, res) => {
-  const post = new Post({
-    title: req.body.postTitle,
-    content: req.body.postContent
-  });
-  post.save()
-    .then(() => res.redirect("/"))
-    .catch(err => console.log(err));
+// Example route
+app.get('/', (req, res) => {
+  res.send('Hello from Daily Journal App!');
 });
 
-app.get("/posts/:postId", (req, res) => {
-  const requestedPostId = req.params.postId;
-  Post.findById(requestedPostId)
-    .then(post => {
-      res.render("post", { title: post.title, content: post.content });
-    })
-    .catch(err => console.log(err));
-});
-
-// Start Server (Render-friendly)
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`🚀 Server started on port ${port}`);
+// Listen on the correct port (important for Render)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server started on port ${PORT}`);
 });
