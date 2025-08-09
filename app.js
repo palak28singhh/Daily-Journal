@@ -56,7 +56,8 @@ app.get("/posts/:postId", (req, res) => {
     .catch(err => console.log(err));
 });
 
-// Start Server
-app.listen(3000, () => {
-  console.log("Server started on port 3000");
+// Start Server (Render-friendly)
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`🚀 Server started on port ${port}`);
 });
